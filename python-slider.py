@@ -2,12 +2,12 @@ from pptx import Presentation
 from pptx.util import Pt
 import openai
 import requests
-from config import api_key
+from config import api_key  
 from grafics import add_header_bar
 from pptx.util import Inches, Pt
 
 
-openai.api_key = api_key
+openai.api_key = api_key    
 
 
 def generate_text(prompt):
@@ -50,7 +50,7 @@ def generate_dalle_image(prompt):
 
 def create_presentation(prompts, file_name="presentation.pptx"):
     prs = Presentation()
-    prs.slide_width = Inches(16)
+    prs.slide_width = Inches(13.2)
 
     # Diapositiva de inicio
     slide = prs.slides.add_slide(prs.slide_layouts[1])
@@ -58,10 +58,14 @@ def create_presentation(prompts, file_name="presentation.pptx"):
     #Edición de la introducción de la clase
     slide.placeholders[1].text = generate_text("Dame una descripción de 7 palabras sobre Introducción a la convergencia de Datos y Negocios")
     #Añade Gráfico de Logo
+    add_header_bar(slide, "FF0E68")
+
+    
+    # Añadir imagen al fondo de la diapositiva
+    slide.shapes.add_picture('img/Background.png', Inches(0), prs.slide_height - Inches(5), prs.slide_width, Injches(5))
     
     slide.shapes.add_picture('img/logo-datarebels-rosa.png', Inches(1), Inches(2))
-
-    # Diapositiva de objetivos
+    slide.shapes.add_picture('img/logo-datarebels-portada.png', Inches(10), Inches(2), Inches(3), Inches(5))    
     slide = prs.slides.add_slide(prs.slide_layouts[1])
     slide.shapes.title.text = "Objetivos"
     #Edición de los objetivos de la clase
@@ -74,6 +78,7 @@ def create_presentation(prompts, file_name="presentation.pptx"):
         slide.shapes.title.text = f"Tema {i}"
         slide.placeholders[1].text = generate_text(prompt)
 
+       
         #Add Grafic Bar 
         add_header_bar(slide, "FF0E68")
 
@@ -110,7 +115,8 @@ def create_presentation(prompts, file_name="presentation.pptx"):
             if shape.has_text_frame:
                 for paragraph in shape.text_frame.paragraphs:
                     for run in paragraph.runs:
-                        run.font.size = Pt(12)
+                        run.font.size = Pt(16)
+                        run.font.name = 'Open Sans'
 
     prs.save(file_name)
     print(f"Presentation saved as {file_name}")
@@ -119,6 +125,7 @@ def main():
     # Prompts para cada tema de la clase
     prompts = [
         "Generauna introducción a la convergencia de Datos y Negocios",
+        
     ]
 
     # Generar texto para cada prompt

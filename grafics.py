@@ -7,10 +7,10 @@ def add_header_bar(slide, color):
     # Añadir una barra en el encabezado de la diapositiva
     header_bar = slide.shapes.add_shape(
         MSO_SHAPE.RECTANGLE,  # Forma rectangular
-        0,  # Posición x (izquierda)
+        Inches(2),  # Posición x (izquierda)
         0,  # Posición y (arriba)
-        Pt(700),  # Ancho (igual al ancho de la diapositiva)
-        Pt(10),  # Alto (3 puntos)
+        Inches(10),  # Ancho (igual al ancho de la diapositiva)
+        Pt(10),  # Alto (3 puntos)go
     )
 
     # Configurar el color de la barra
