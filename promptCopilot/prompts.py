@@ -9,3 +9,5 @@ specific_topics = "Ejemplos y casos de uso de sistemas de recomendación"
 course_level = "avanzado"
 
 course_focus = "técnico"
+
+next_learning_unit = "IA Generativa"

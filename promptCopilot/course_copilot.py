@@ -3,7 +3,7 @@ import gspread
 import re
 from config import api_key, api_google
 from oauth2client.service_account import ServiceAccountCredentials
-from prompts import course_name, target_audience, specific_topics, course_level, course_focus
+from prompts import course_name, target_audience, specific_topics, course_level, course_focus, next_learning_unit
 
 # Initial Configuration
 openai.api_key = api_key
@@ -16,6 +16,8 @@ spreadsheet = client.open('Pipeline para creación de cursos')
 sheet1 = spreadsheet.sheet1
 sheet2 = spreadsheet.get_worksheet(1) 
 sheet3 = spreadsheet.get_worksheet(2) 
+sheet4 = spreadsheet.get_worksheet(3) 
+
 
 
 def generate_chatgpt(prompt, model="gpt-4o",temperature =0.7):
@@ -95,6 +97,19 @@ def generate_course_secondary_objectives(course_name, course_level, course_focus
     return generate_chatgpt(prompt)
 
 
+def generate_graduate_profile(course_name, target_audience, specific_topics, next_learning_unit, principal_objetive, secondary_objetives):
+
+    prompt = (
+        f"Basándote en la descripción del curso que es {course_name}y los objetivos  que son {principal_objetive} y {secondary_objetives} tanto generales como específicos definidos previamente y en los {specific_topics}, "
+        f"procede a crear un perfil de egreso para los estudiantes que completen el curso de {course_name}, "
+        f"enfocado especialmente en aquellos {target_audience}. "
+        f"Considera que idealmente el siguiente paso en su camino de aprendizaje es tener las bases para continuar su aprendizaje en {next_learning_unit}, "
+        f"sin embargo no lo menciones explícitamente. "
+        f"- Redacta un párrafo que sea claro, conciso e impactante, reflejando el valor que los estudiantes aportarán a sus empresas o su crecimiento profesional tras completar el curso. "
+        f"Este debe resumir las capacidades, la mentalidad y la preparación con la que contarán los egresados, destacando su preparación para enfrentar los desafíos tecnológicos actuales."
+    )
+    return generate_chatgpt(prompt)
+
 print('Generating Income Profile .... 🤖')
 
 profile = generate_course_entry_profile(course_name, target_audience, specific_topics, course_level, course_focus)
@@ -153,14 +168,26 @@ lines = secondary_objetives.strip().split('\n')
 
 # Iterar sobre las líneas
 for i, line in enumerate(lines, start=3):
-    # Buscar el número, nombre y descripción del objetivo
     number_match = re.search(r'Número\[(.*?)\]', line)
     name_match = re.search(r'Nombre\[(.*?)\]', line)
     description_match = re.search(r'Descripción\[(.*?)\]', line)
 
-    # Actualizar las celdas en Google Sheets
+
     if number_match and name_match and description_match:
         sheet3.update_cell(i, 3, name_match.group(1))
         sheet3.update_cell(i, 4, description_match.group(1))
 
 print ('Done! ✅')
+
+print('Generating Graduate Profile .... 🤖')
+graduate_profile = generate_graduate_profile(course_name, target_audience, specific_topics, next_learning_unit, principal_objetive, secondary_objetives)
+
+
+print ('Writting in Google Sheets .... ✍️ ')
+
+
+sheet4.update_cell(1, 2, graduate_profile)
+
+print ('Done! ✅')
+
+print('Generating Principal Habilities .... 🤖')
