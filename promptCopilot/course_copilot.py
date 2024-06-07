@@ -3,9 +3,19 @@ import gspread
 import requests
 from config import api_key, api_google
 from oauth2client.service_account import ServiceAccountCredentials
+from prompts import course_name, target_audience, specific_topics, course_level, course_focus
 
-# Configura tu API key de OpenAI aquí
+# Initial Configuration
 openai.api_key = api_key
+#API Google Sheets
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name('course-copilot-425602-78432e6747e5.json', scope)
+client = gspread.authorize(creds)
+
+sheet = client.open('Pipeline para creación de cursos').sheet1
+
+
+
 
 def generate_course_entry_profile(course_name, target_audience, specific_topics, course_level, course_focus):
     """
@@ -39,22 +49,19 @@ def generate_course_entry_profile(course_name, target_audience, specific_topics,
     # Devolver solo el contenido de la respuesta
     return response.choices[0].message.content
 
-# Ejemplo de cómo usar la función
-course_name = "Introducción a la Inteligencia Artificial"
-target_audience = "principiantes en tecnología"
-specific_topics = "aprendizaje automático, redes neuronales"
-course_level = "básico"
-course_focus = "teórico y práctico"
 
 
-#Modificación de Hoja Sheets
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('course-copilot-425602-78432e6747e5.json', scope)
-client = gspread.authorize(creds)
 
-sheet = client.open('Pipeline para creación de cursos').sheet1
+
 #Genera 
-sheet.append_row([course_name, target_audience, specific_topics, course_level, course_focus])
+
+
 
 profile = generate_course_entry_profile(course_name, target_audience, specific_topics, course_level, course_focus)
-print(profile)
+print('Generating Income Profile ....')
+
+sheet.update_cell(2, 1, profile)
+
+print ('Done!')
+
+print ('Writting in Google Sheets ...., ')
