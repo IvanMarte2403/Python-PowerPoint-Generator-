@@ -1,6 +1,6 @@
 import openai
 import gspread
-import json
+import re
 from config import api_key, api_google
 from oauth2client.service_account import ServiceAccountCredentials
 from prompts import course_name, target_audience, specific_topics, course_level, course_focus
@@ -8,9 +8,13 @@ from prompts import course_name, target_audience, specific_topics, course_level,
 # Initial Configuration
 openai.api_key = api_key
 #API Google Sheets
+#API Google Sheets
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_name('course-copilot-425602-78432e6747e5.json', scope)
-
+client = gspread.authorize(creds)
+spreadsheet = client.open('Pipeline para creación de cursos')
+sheet1 = spreadsheet.sheet1
+sheet2 = spreadsheet.get_worksheet(1) 
 
 def generate_chatgpt(prompt, model="gpt-3.5-turbo",temperature =0.7):
     response = openai.chat.completions.create(
@@ -47,8 +51,7 @@ def generate_course_entry_profile(course_name, target_audience, specific_topics,
         f"Este curso tiene un nivel {course_level}. El perfil de ingreso ideal para este curso es..."
     )
 
-    response = generate_chatgpt(prompt)
-    print(response)
+    return generate_chatgpt(prompt)
 
 
 
@@ -56,43 +59,39 @@ def search_and_analyze_courses(course_name, course_level):
     """Busca y analiza cursos similares para identificar oportunidades de mejora."""
     print(f"Realizando investigación de cursos similares a {course_name} de nivel {course_level}...")
 
-    prompt = f"Genera una lista de cinco cursos similares a {course_name} de nivel {course_level}. Cada curso debe tener un nombre, un año de lanzamiento y una lista de objetivos. Formato: 'Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]'. Retorna [número] Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]. en lista"
+    prompt = f"Genera una lista de cinco cursos similares a {course_name} de nivel {course_level}. Cada curso debe tener un nombre, un año de lanzamiento y una lista de objetivos. Formato: 'Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]' . Retorna [número] Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]. escribe al final de cada linea "
     response = generate_chatgpt(prompt)
+    courses =response
+    
+    sections = re.split(r'\n\d',courses)
+    if sections[0]  == ' ':
+        sections = sections[1:]
 
-    courses = parse_response_to_courses(response)
+    print(sections)
+    return sections
 
-    # Análisis comparativo
-    for course in courses:
-        print(f"Evaluando {course['name']} lanzado en {course['year']} con los siguientes objetivos: {course['objectives']}")
-
-    # Identificar cinco áreas de oportunidad
-    opportunities = ["Mejora en la profundidad de temas", "Actualización de tecnologías", "Inclusión de proyectos prácticos", "Extensión de colaboraciones industriales", "Ampliación de la comunidad de aprendizaje"]
-    return opportunities
 
  
 
-def parse_response_to_courses(response):
-    """Convierte la respuesta de generate_chatgpt en una lista de diccionarios."""
-    try:
-        courses = json.loads(response)
-    except json.JSONDecodeError:
-        print("La respuesta no tiene un formato JSON válido.")
-        courses = []
-    return courses    
 
 
 
 
 profile = generate_course_entry_profile(course_name, target_audience, specific_topics, course_level, course_focus)
-print('Generating Income Profile ....')
+print('Generating Income Profile .... 🤖')
+sheet1.update_cell(2, 1, profile)
 
-client = gspread.authorize(creds)
-sheet = client.open('Pipeline para creación de cursos').sheet1
-sheet.update_cell(2, 1, profile)
+print ('Done! ✅')
 
-print ('Done!')
-
-print ('Writting in Google Sheets ...., ')
+print ('Writting in Google Sheets .... ✍️ ')
 
 
+course = search_and_analyze_courses(course_name, course_level)
+print('Generating Income Profile .... 🤖')
 
+
+
+print ('Writting in Google Sheets .... ✍️ ')
+
+for i, section in enumerate(course, start=0):
+    sheet2.update_cell(i+2, 1, section)
