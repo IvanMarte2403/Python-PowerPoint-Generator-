@@ -15,8 +15,10 @@ client = gspread.authorize(creds)
 spreadsheet = client.open('Pipeline para creación de cursos')
 sheet1 = spreadsheet.sheet1
 sheet2 = spreadsheet.get_worksheet(1) 
+sheet3 = spreadsheet.get_worksheet(2) 
 
-def generate_chatgpt(prompt, model="gpt-3.5-turbo",temperature =0.7):
+
+def generate_chatgpt(prompt, model="gpt-4o",temperature =0.7):
     response = openai.chat.completions.create(
         model= model,
         messages=[{"role": "system", "content": "Start"}, {"role": "user", "content": prompt}],
@@ -48,18 +50,17 @@ def generate_course_entry_profile(course_name, target_audience, specific_topics,
         f"Como experto diseñador de programas académicos especializado en tecnología, "
         f"tu tarea es mejorar el perfil de ingreso para el curso de {course_name} "
         f"tomando como base a estudiantes {target_audience} definido para este curso. "
-        f"Este curso tiene un nivel {course_level}. El perfil de ingreso ideal para este curso es..."
+        f"Este curso tiene un nivel {course_level}. El perfil de ingreso ideal para este curso es..., no se deben usar caracteres especiales o formatos específicos para el texto."
     )
 
     return generate_chatgpt(prompt)
 
 
 
-def search_and_analyze_courses(course_name, course_level):
-    """Busca y analiza cursos similares para identificar oportunidades de mejora."""
+def search_and_analyze_courses(course_name, course_level,profile):
     print(f"Realizando investigación de cursos similares a {course_name} de nivel {course_level}...")
 
-    prompt = f"Genera una lista de cinco cursos similares a {course_name} de nivel {course_level}. Cada curso debe tener un nombre, un año de lanzamiento y una lista de objetivos. Formato: 'Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]' . Retorna [número] Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]. escribe al final de cada linea "
+    prompt = f"Como experto diseñador de programas académicos especializado en tecnología, tu tarea es desarrollar un nuevo curso titulado {course_name} dirigido a {profile}. Para garantizar que el curso sea competitivo y cumpla con las expectativas del público objetivo, realiza una investigación comparativa de tres cursos relacionados disponibles en plataformas de educación en línea, tomando en cuenta el {course_level} Formato:   'Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]', Descripcion Breve: [descripcion-breve], Temario Detallado [temario-detallado]  , Retorna [número] Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3].  Descripcion Breve: [descripcion-breve], Temario Detallado [temario-detallado] , no se deben usar caracteres especiales o formatos específicos para el texto. solo es permitido []"
     response = generate_chatgpt(prompt)
     courses =response
     
@@ -67,27 +68,46 @@ def search_and_analyze_courses(course_name, course_level):
     if sections[0]  == ' ':
         sections = sections[1:]
 
-    print(sections)
     return sections
 
 
- 
+def generate_course_objectives(course_name, course_level, course_focus, profile, specific_topics):
+    prompt = (
+        f"Basándote en las áreas de oportunidad identificadas y en los {specific_topics} si es que existen, "
+        f"para el curso de {course_name} con un nivel {course_level} y un enfoque {course_focus}, "
+        f"orientado a {profile} procede a definir un objetivo claro y conciso del curso. "
+        f"Estos objetivos deben estructurarse de manera que reflejen las metas educativas del programa y cómo se alinean con las necesidades del {profile}. "
+        f"El nombre del objetivo tiene que captar la esencia del curso, y la descripción del objetivo describe en habilidades. No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido []."
+        f"\n\nNombre[nombre del Objetivo], Descripción[descripcion del objetivo]\n"
+    )
+    return generate_chatgpt(prompt)
 
 
+def generate_course_secondary_objectives(course_name, course_level, course_focus, profile, specific_topics, principal_objective):
+    prompt = (
+        f"Basándote en las áreas de oportunidad identificadas y en los {specific_topics} si es que existen, "
+        f"para el curso de {course_name} con un nivel {course_level} y un enfoque {course_focus}, y en el objetivo principal {principal_objective} "
+        f"orientado a {profile} procede a definir 5 objetivos claros y concisos del curso. "
+        f"Estos objetivos deben estructurarse de manera que reflejen las metas educativas del programa y cómo se alinean con las necesidades del {profile}. "
+        f"El nombre del objetivo tiene que captar la esencia del curso, y la descripción del objetivo describe en habilidades. No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido []."
+        f"\n\nNumero[numero del objetivo],Nombre[nombre del Objetivo], Descripción[descripcion del objetivo]\n"
+    )
+    return generate_chatgpt(prompt)
 
 
+print('Generating Income Profile .... 🤖')
 
 profile = generate_course_entry_profile(course_name, target_audience, specific_topics, course_level, course_focus)
-print('Generating Income Profile .... 🤖')
+print ('Writting in Google Sheets .... ✍️ ')
+
 sheet1.update_cell(2, 1, profile)
 
 print ('Done! ✅')
 
-print ('Writting in Google Sheets .... ✍️ ')
 
+print('Generating Courses  .... 🤖')
 
-course = search_and_analyze_courses(course_name, course_level)
-print('Generating Income Profile .... 🤖')
+course = search_and_analyze_courses(course_name, course_level,profile)
 
 
 
@@ -95,3 +115,52 @@ print ('Writting in Google Sheets .... ✍️ ')
 
 for i, section in enumerate(course, start=0):
     sheet2.update_cell(i+2, 1, section)
+
+
+print ('Done! ✅')
+
+
+
+print('Generating  Principal Objetive .... 🤖')
+
+principal_objetive = generate_course_objectives(course_name, course_level, course_focus, profile, specific_topics)
+
+print ('Writting in Google Sheets .... ✍️ ')
+
+# Search Objetivo in the text
+match = re.search(r'Nombre\[(.*?)\]', principal_objetive)
+if match:
+    name = match.group(1)
+    sheet3.update_cell(2, 1, name)
+
+match = re.search(r'Descripción\[(.*?)\]', principal_objetive)
+if match:
+    description = match.group(1)
+    sheet3.update_cell(3, 1, description)
+
+    print ('Done! ✅')
+
+
+
+print('Generating  Objectives .... 🤖')
+
+secondary_objetives = generate_course_secondary_objectives(course_name, course_level, course_focus, profile, specific_topics, principal_objetive)
+
+print ('Writting in Google Sheets .... ✍️ ')
+
+# Dividir el texto en líneas
+lines = secondary_objetives.strip().split('\n')
+
+# Iterar sobre las líneas
+for i, line in enumerate(lines, start=3):
+    # Buscar el número, nombre y descripción del objetivo
+    number_match = re.search(r'Número\[(.*?)\]', line)
+    name_match = re.search(r'Nombre\[(.*?)\]', line)
+    description_match = re.search(r'Descripción\[(.*?)\]', line)
+
+    # Actualizar las celdas en Google Sheets
+    if number_match and name_match and description_match:
+        sheet3.update_cell(i, 3, name_match.group(1))
+        sheet3.update_cell(i, 4, description_match.group(1))
+
+print ('Done! ✅')
