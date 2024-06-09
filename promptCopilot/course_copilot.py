@@ -91,7 +91,7 @@ def generate_course_secondary_objectives(course_name, course_level, course_focus
         f"para el curso de {course_name} con un nivel {course_level} y un enfoque {course_focus}, y en el objetivo principal {principal_objective} "
         f"orientado a {profile} procede a definir 5 objetivos claros y concisos del curso. "
         f"Estos objetivos deben estructurarse de manera que reflejen las metas educativas del programa y cómo se alinean con las necesidades del {profile}. "
-        f"El nombre del objetivo tiene que captar la esencia del curso, y la descripción del objetivo describe en habilidades. No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido []."
+        f"El nombre del objetivo tiene que captar la esencia del curso, y la descripción del objetivo describe en habilidades. No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido []. Es obligatorio que el numero retorne con el formato Numero[numero del objetivo]"
         f"\n\nNumero[numero del objetivo],Nombre[nombre del Objetivo], Descripción[descripcion del objetivo]\n"
     )
     return generate_chatgpt(prompt)
@@ -109,6 +109,21 @@ def generate_graduate_profile(course_name, target_audience, specific_topics, nex
         f"Este debe resumir las capacidades, la mentalidad y la preparación con la que contarán los egresados, destacando su preparación para enfrentar los desafíos tecnológicos actuales."
     )
     return generate_chatgpt(prompt)
+
+def generate_key_skills(course_name, target_audience, graduate_profile):
+        prompt = (
+            f"En todas las habilidades basate tambien en {graduate_profile}. Para cada una de las 5 habilidades principales del curso {course_name}, enfocado en {target_audience}, "
+            f"genera un detalle que incluya:\n"
+            f"→ Nombre de la Habilidad: Breve y directo.\n"
+            f"→ Dos Key Points: En forma de bullet points, destaca dos aspectos cruciales que evidencian por qué cada habilidad es esencial y cómo contribuye al perfil profesional del egresado en el entorno laboral dinámico de hoy.\n\n"
+            f"Retorna el siguiente formato obligatorio  para cada habilidad:, no excluyas ningun []  No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido []\n"
+            f"Numero[numero de la habilidad], Nombre:[nombre de la habilidad], Descripcion: [key[descripcion habilidad 1, descripcion habilidad 2]]"
+        )
+        
+        return generate_chatgpt(prompt)
+
+
+    # ==========================[Aplicación]=================================
 
 print('Generating Income Profile .... 🤖')
 
@@ -156,26 +171,35 @@ if match:
     print ('Done! ✅')
 
 
+# ======================Generating Objetives=====================
 
 print('Generating  Objectives .... 🤖')
 
 secondary_objetives = generate_course_secondary_objectives(course_name, course_level, course_focus, profile, specific_topics, principal_objetive)
 
-print ('Writting in Google Sheets .... ✍️ ')
+print("Objetivos secundarios generados:")
+print(secondary_objetives)
+print('Escribiendo en Google Sheets .... ✍️')
 
 # Dividir el texto en líneas
 lines = secondary_objetives.strip().split('\n')
 
+# Verificar que las líneas se están dividiendo correctamente
+print(f"Total de líneas a procesar: {len(lines)}")
+
 # Iterar sobre las líneas
 for i, line in enumerate(lines, start=3):
-    number_match = re.search(r'Número\[(.*?)\]', line)
+    print(f"Procesando línea {i}")  # Impresión de depuración
+    number_match = re.search(r'Numero\[(.*?)\]', line)
     name_match = re.search(r'Nombre\[(.*?)\]', line)
-    description_match = re.search(r'Descripción\[(.*?)\]', line)
-
+    description_match = re.search(r'Descripci[oó]n\[(.*?)\]', line)
 
     if number_match and name_match and description_match:
+        print(f"Actualizando Google Sheets para la línea {i}")  # Más impresiones de depuración
         sheet3.update_cell(i, 3, name_match.group(1))
         sheet3.update_cell(i, 4, description_match.group(1))
+    else:
+        print(f"No se encontraron coincidencias en la línea {i}")  # Ayuda a identificar líneas problemáticas
 
 print ('Done! ✅')
 
@@ -188,6 +212,13 @@ print ('Writting in Google Sheets .... ✍️ ')
 
 sheet4.update_cell(1, 2, graduate_profile)
 
-print ('Done! ✅')
+print ('Done! ✅') 
 
 print('Generating Principal Habilities .... 🤖')
+
+key_skills = generate_key_skills(course_name, target_audience, graduate_profile) 
+
+# print(key_skills)
+
+print ('Writting in Google Sheets .... ✍️ ')
+
