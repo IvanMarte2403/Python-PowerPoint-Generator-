@@ -17,7 +17,7 @@ sheet1 = spreadsheet.sheet1
 sheet2 = spreadsheet.get_worksheet(1) 
 sheet3 = spreadsheet.get_worksheet(2) 
 sheet4 = spreadsheet.get_worksheet(3) 
-
+ 
 
 
 def generate_chatgpt(prompt, model="gpt-4o",temperature =0.7):
@@ -62,7 +62,7 @@ def generate_course_entry_profile(course_name, target_audience, specific_topics,
 def search_and_analyze_courses(course_name, course_level,profile):
     print(f"Realizando investigación de cursos similares a {course_name} de nivel {course_level}...")
 
-    prompt = f"Como experto diseñador de programas académicos especializado en tecnología, tu tarea es desarrollar un nuevo curso titulado {course_name} dirigido a {profile}. Para garantizar que el curso sea competitivo y cumpla con las expectativas del público objetivo, realiza una investigación comparativa de tres cursos relacionados disponibles en plataformas de educación en línea, tomando en cuenta el {course_level} Formato:   'Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]', Descripcion Breve: [descripcion-breve], Temario Detallado [temario-detallado]  , Retorna [número] Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3].  Descripcion Breve: [descripcion-breve], Temario Detallado [temario-detallado] , no se deben usar caracteres especiales o formatos específicos para el texto. solo es permitido []"
+    prompt = f"Como experto diseñador de programas ac adémicos especializado en tecnología, tu tarea es desarrollar un nuevo curso titulado {course_name} dirigido a {profile}. Para garantizar que el curso sea competitivo y cumpla con las expectativas del público objetivo, realiza una investigación comparativa de tres cursos relacionados disponibles en plataformas de educación en línea, tomando en cuenta el {course_level} Formato:   'Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3]', Descripcion Breve: [descripcion-breve], Temario Detallado [temario-detallado]  , Retorna [número] Nombre: [nombre], Año: [año], Objetivos: [objetivo1, objetivo2, objetivo3].  Descripcion Breve: [descripcion-breve], Temario Detallado [temario-detallado] , no se deben usar caracteres especiales o formatos específicos para el texto. solo es permitido []"
     response = generate_chatgpt(prompt)
     courses =response
     
@@ -117,7 +117,7 @@ def generate_key_skills(course_name, target_audience, graduate_profile):
             f"→ Nombre de la Habilidad: Breve y directo.\n"
             f"→ Dos Key Points: En forma de bullet points, destaca dos aspectos cruciales que evidencian por qué cada habilidad es esencial y cómo contribuye al perfil profesional del egresado en el entorno laboral dinámico de hoy.\n\n"
             f"Retorna el siguiente formato obligatorio  para cada habilidad:, no excluyas ningun []  No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido []\n"
-            f"Numero[numero de la habilidad], Nombre:[nombre de la habilidad], Descripcion: [key[descripcion habilidad 1, descripcion habilidad 2]]"
+            f"Numero[numero de la habilidad], Nombre:[nombre de la habilidad], Descripcion: [key[1. (descripcion habilidad), 2. (descripcion habilidad)]]"
         )
         
         return generate_chatgpt(prompt)
@@ -178,7 +178,6 @@ print('Generating  Objectives .... 🤖')
 secondary_objetives = generate_course_secondary_objectives(course_name, course_level, course_focus, profile, specific_topics, principal_objetive)
 
 print("Objetivos secundarios generados:")
-print(secondary_objetives)
 print('Escribiendo en Google Sheets .... ✍️')
 
 # Dividir el texto en líneas
@@ -216,9 +215,33 @@ print ('Done! ✅')
 
 print('Generating Principal Habilities .... 🤖')
 
-key_skills = generate_key_skills(course_name, target_audience, graduate_profile) 
+# Suponiendo que la función generate_key_skills y la variable sheet4 ya están definidas
+key_skills = generate_key_skills(course_name, target_audience, graduate_profile)
 
-# print(key_skills)
+print(key_skills)
 
-print ('Writting in Google Sheets .... ✍️ ')
+print('Writting in Google Sheets .... ✍️ ')
+key_skills_lines = key_skills.split('\n')  # Dividir por líneas
 
+for line in key_skills_lines:
+    # Extraer número, nombre y descripción
+    number_match = re.search(r'Numero\[(\d+)\]', line)
+    name_match = re.search(r'Nombre\:\[(.*?)\]', line)
+    # Ajuste en la expresión regular para capturar toda la descripción correctamente
+    description_match = re.search(r'Descripcion:\[key\[(.*?)\]\]', line, re.DOTALL)
+    
+    if number_match and name_match and description_match:
+        number = int(number_match.group(1))
+        name = name_match.group(1)
+        # Ajuste para limpiar la descripción, eliminando saltos de línea innecesarios y espacios extra
+        description = " ".join(description_match.group(1).split())
+        
+        # Calcular la fila en Google Sheets
+        name_row = 2 + number  # Los nombres comienzan en la fila 3
+        description_row = name_row  # La descripción va en la misma fila que el nombre
+        
+        # Actualizar Google Sheets
+        sheet4.update_cell(name_row, 1, name)  # Nombre en columna 1
+        sheet4.update_cell(description_row, 2, description)  # Descripción en columna 2
+
+print ('Done! ✅') 
