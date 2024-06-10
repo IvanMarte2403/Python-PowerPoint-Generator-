@@ -17,6 +17,8 @@ sheet1 = spreadsheet.sheet1
 sheet2 = spreadsheet.get_worksheet(1) 
 sheet3 = spreadsheet.get_worksheet(2) 
 sheet4 = spreadsheet.get_worksheet(3) 
+sheet5 = spreadsheet.get_worksheet(4) 
+
  
 
 
@@ -73,9 +75,9 @@ def search_and_analyze_courses(course_name, course_level,profile):
     return sections
 
 
-def generate_course_objectives(course_name, course_level, course_focus, profile, specific_topics):
+def generate_course_objectives(course_name, course_level, course_focus, profile, specific_topics,course):
     prompt = (
-        f"Basándote en las áreas de oportunidad identificadas y en los {specific_topics} si es que existen, "
+        f"Basándote en las áreas de oportunidad identificadas y en los {specific_topics} si es que existen, y los cursos {course} "
         f"para el curso de {course_name} con un nivel {course_level} y un enfoque {course_focus}, "
         f"orientado a {profile} procede a definir un objetivo claro y conciso del curso. "
         f"Estos objetivos deben estructurarse de manera que reflejen las metas educativas del programa y cómo se alinean con las necesidades del {profile}. "
@@ -85,9 +87,9 @@ def generate_course_objectives(course_name, course_level, course_focus, profile,
     return generate_chatgpt(prompt)
 
 
-def generate_course_secondary_objectives(course_name, course_level, course_focus, profile, specific_topics, principal_objective):
+def generate_course_secondary_objectives(course_name, course_level, course_focus, profile, specific_topics, principal_objective,course):
     prompt = (
-        f"Basándote en las áreas de oportunidad identificadas y en los {specific_topics} si es que existen, "
+        f"Basándote en las áreas de oportunidad identificadas y en los {specific_topics} si es que existen, y en los cursos {course}"
         f"para el curso de {course_name} con un nivel {course_level} y un enfoque {course_focus}, y en el objetivo principal {principal_objective} "
         f"orientado a {profile} procede a definir 5 objetivos claros y concisos del curso. "
         f"Estos objetivos deben estructurarse de manera que reflejen las metas educativas del programa y cómo se alinean con las necesidades del {profile}. "
@@ -101,7 +103,7 @@ def generate_graduate_profile(course_name, target_audience, specific_topics, nex
 
     prompt = (
         f"Basándote en la descripción del curso que es {course_name}y los objetivos  que son {principal_objetive} y {secondary_objetives} tanto generales como específicos definidos previamente y en los {specific_topics}, "
-        f"procede a crear un perfil de egreso para los estudiantes que completen el curso de {course_name}, "
+        f"procede a crear un perfil de egreso para los estudiante   s que completen el curso de {course_name}, "
         f"enfocado especialmente en aquellos {target_audience}. "
         f"Considera que idealmente el siguiente paso en su camino de aprendizaje es tener las bases para continuar su aprendizaje en {next_learning_unit}, "
         f"sin embargo no lo menciones explícitamente. "
@@ -117,10 +119,43 @@ def generate_key_skills(course_name, target_audience, graduate_profile):
             f"→ Nombre de la Habilidad: Breve y directo.\n"
             f"→ Dos Key Points: En forma de bullet points, destaca dos aspectos cruciales que evidencian por qué cada habilidad es esencial y cómo contribuye al perfil profesional del egresado en el entorno laboral dinámico de hoy.\n\n"
             f"Retorna el siguiente formato obligatorio  para cada habilidad:, no excluyas ningun []  No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido []\n"
-            f"Numero[numero de la habilidad], Nombre:[nombre de la habilidad], Descripcion: [key[1. (descripcion habilidad), 2. (descripcion habilidad)]]"
+            f"Numero[numero de la habilidad], Nombre:[nombre de la habilidad], Descripcion: [key[habildidad1, habilidad2 ]]"
         )
         
         return generate_chatgpt(prompt)
+
+
+def generate_course_syllabus(course_name, entry_profile, course_focus, main_objective, course):
+   
+    # Determining the number of classes and their distribution based on course focus
+    if course_focus == "teórico":
+        total_classes = 24
+        weekly_distribution = "4 clases por semana de 1 hora cada clase, con 3 conceptos clave por clase."
+    elif course_focus == "técnico":
+        total_classes = 12
+        weekly_distribution = "2 clases por semana de 2 horas cada clase, 1 hora teoría y 1 hora de contenido técnico con ejercicios prácticos."
+
+    # Sylabus Prompt
+    prompt = (
+        f"Como diseñador de programas académicos especializado en tecnología y con experiencia en la creación de cursos de ciencia de datos y negocios para empresas internacionales, basate en los cursos {course} "
+        f"tu misión es concretar un temario completo y detallado para el curso de {course_name}, orientado especialmente a {entry_profile} utilizando como base el perfil de egreso previamente generado, "
+        f"el objetivo principal y objetivos secundarios, tu tarea consiste en diseñar un temario que cumpla con las especificaciones detalladas y las necesidades de la audiencia. Este temario debe estructurarse considerando los siguientes requisitos:\n"
+        f"1. Duración Total del Curso: 6 semanas de enseñanza teórica y práctica, enfocando cada semana en el avance de un proyecto final.\n"
+        f"2. Total de clases: {total_classes}, distribución semanal: {weekly_distribution}\n"
+        f"Al estructurar el temario, considera lo siguiente:\n"
+        f"- La importancia de incorporar fundamentos teóricos sólidos junto con aplicaciones prácticas que reflejen situaciones reales del curso.\n"
+        f"- La necesidad de adaptar los contenidos y metodologías de enseñanza para facilitar el aprendizaje del {entry_profile}, el {main_objective} y el enfoque {course_focus}.\n"
+        f"- La creación de un ambiente de aprendizaje que promueva la interacción, la resolución de problemas, y el desarrollo de un proyecto final que consolide el aprendizaje de todo el curso y habilidades adquiridas durante el curso.\n"
+        f"Nombre Semana: Tiene que ser un nombre de la semana, máximo 6 palabras,\n"
+        f"Clase: Tiene que ser un titulo llamativo que refleje el contenido de la clase,\n"
+        f"Conceptos: de clase: Los conceptos separados por comas de la clase,\n"
+        f"Descripcion de la clase: Una breve descripcion que refleje los conceptos y el contenido de la clase y que outline saldrán los alumnos de esa clase,\n"
+        f"Objetivos de la clase: 3 conceptos separados con comas de lo que se espera que los alumnos aprendan en la clase\n"
+        f"Retorna el siguiente formato obligatorio para cada habilidad:, no excluyas ningun []  No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido [] Semana[Nombre de la semana, Clases[Clase1 [Conceptos de clase], Descripcion de la clase, Objetivos de la clase], Clase2 [Conceptos de clase], Descripcion de la clase, Objetivos de la clase], Clase3 [Conceptos de clase], Descripcion de la clase, Objetivos de la clase], Clase4]\n"
+        f"Ten en cuenta {total_classes} clases en total."
+    )
+
+    return generate_chatgpt(prompt)
 
 
     # ==========================[Aplicación]=================================
@@ -153,7 +188,7 @@ print ('Done! ✅')
 
 print('Generating  Principal Objetive .... 🤖')
 
-principal_objetive = generate_course_objectives(course_name, course_level, course_focus, profile, specific_topics)
+principal_objetive = generate_course_objectives(course_name, course_level, course_focus, profile, specific_topics, course)
 
 print ('Writting in Google Sheets .... ✍️ ')
 
@@ -175,7 +210,7 @@ if match:
 
 print('Generating  Objectives .... 🤖')
 
-secondary_objetives = generate_course_secondary_objectives(course_name, course_level, course_focus, profile, specific_topics, principal_objetive)
+secondary_objetives = generate_course_secondary_objectives(course_name, course_level, course_focus, profile, specific_topics, principal_objetive,course)
 
 print("Objetivos secundarios generados:")
 print('Escribiendo en Google Sheets .... ✍️')
@@ -215,10 +250,9 @@ print ('Done! ✅')
 
 print('Generating Principal Habilities .... 🤖')
 
-# Suponiendo que la función generate_key_skills y la variable sheet4 ya están definidas
 key_skills = generate_key_skills(course_name, target_audience, graduate_profile)
 
-print(key_skills)
+print (key_skills)
 
 print('Writting in Google Sheets .... ✍️ ')
 key_skills_lines = key_skills.split('\n')  # Dividir por líneas
@@ -245,3 +279,14 @@ for line in key_skills_lines:
         sheet4.update_cell(description_row, 2, description)  # Descripción en columna 2
 
 print ('Done! ✅') 
+
+
+print('Generating Course Syllabus .... 🤖')
+
+syllabus = generate_course_syllabus(course_name, profile, course_focus, principal_objetive, course)
+
+print (syllabus)
+
+print ('Writting in Google Sheets .... ✍️ ')
+
+
