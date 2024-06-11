@@ -99,11 +99,12 @@ def generate_course_secondary_objectives(course_name, course_level, course_focus
     return generate_chatgpt(prompt)
 
 
+#Graduate Profile
 def generate_graduate_profile(course_name, target_audience, specific_topics, next_learning_unit, principal_objetive, secondary_objetives):
 
     prompt = (
         f"Basándote en la descripción del curso que es {course_name}y los objetivos  que son {principal_objetive} y {secondary_objetives} tanto generales como específicos definidos previamente y en los {specific_topics}, "
-        f"procede a crear un perfil de egreso para los estudiante   s que completen el curso de {course_name}, "
+        f"procede a crear un perfil de egreso para los estudiantes que completen el curso de {course_name}, "
         f"enfocado especialmente en aquellos {target_audience}. "
         f"Considera que idealmente el siguiente paso en su camino de aprendizaje es tener las bases para continuar su aprendizaje en {next_learning_unit}, "
         f"sin embargo no lo menciones explícitamente. "
@@ -112,6 +113,8 @@ def generate_graduate_profile(course_name, target_audience, specific_topics, nex
     )
     return generate_chatgpt(prompt)
 
+
+# Key Skills 
 def generate_key_skills(course_name, target_audience, graduate_profile):
         prompt = (
             f"En todas las habilidades basate tambien en {graduate_profile}. Para cada una de las 5 habilidades principales del curso {course_name}, enfocado en {target_audience}, "
@@ -119,7 +122,7 @@ def generate_key_skills(course_name, target_audience, graduate_profile):
             f"→ Nombre de la Habilidad: Breve y directo.\n"
             f"→ Dos Key Points: En forma de bullet points, destaca dos aspectos cruciales que evidencian por qué cada habilidad es esencial y cómo contribuye al perfil profesional del egresado en el entorno laboral dinámico de hoy.\n\n"
             f"Retorna el siguiente formato obligatorio  para cada habilidad:, no excluyas ningun []  No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido []\n"
-            f"Numero[numero de la habilidad], Nombre:[nombre de la habilidad], Descripcion: [key[habildidad1, habilidad2 ]]"
+            f"Numero[numero de la habilidad], Nombre[nombre de la habilidad], Descripcion [key1, key2], "
         )
         
         return generate_chatgpt(prompt)
@@ -237,6 +240,8 @@ for i, line in enumerate(lines, start=3):
 
 print ('Done! ✅')
 
+# =========================Printing Graduate Profile=========================
+
 print('Generating Graduate Profile .... 🤖')
 graduate_profile = generate_graduate_profile(course_name, target_audience, specific_topics, next_learning_unit, principal_objetive, secondary_objetives)
 
@@ -246,40 +251,34 @@ print ('Writting in Google Sheets .... ✍️ ')
 
 sheet4.update_cell(1, 2, graduate_profile)
 
-print ('Done! ✅') 
+
+print('Done! ✅')
+
+
+# =========================Printing Key Skills=========================
 
 print('Generating Principal Habilities .... 🤖')
 
 key_skills = generate_key_skills(course_name, target_audience, graduate_profile)
 
-print (key_skills)
+print(key_skills)
+print('Writting in Google Sheets .... ✍️')
 
-print('Writting in Google Sheets .... ✍️ ')
-key_skills_lines = key_skills.split('\n')  # Dividir por líneas
 
-for line in key_skills_lines:
-    # Extraer número, nombre y descripción
-    number_match = re.search(r'Numero\[(\d+)\]', line)
-    name_match = re.search(r'Nombre\:\[(.*?)\]', line)
-    # Ajuste en la expresión regular para capturar toda la descripción correctamente
-    description_match = re.search(r'Descripcion:\[key\[(.*?)\]\]', line, re.DOTALL)
-    
-    if number_match and name_match and description_match:
-        number = int(number_match.group(1))
-        name = name_match.group(1)
-        # Ajuste para limpiar la descripción, eliminando saltos de línea innecesarios y espacios extra
-        description = " ".join(description_match.group(1).split())
-        
-        # Calcular la fila en Google Sheets
-        name_row = 2 + number  # Los nombres comienzan en la fila 3
-        description_row = name_row  # La descripción va en la misma fila que el nombre
-        
-        # Actualizar Google Sheets
-        sheet4.update_cell(name_row, 1, name)  # Nombre en columna 1
-        sheet4.update_cell(description_row, 2, description)  # Descripción en columna 2
+# Extraer habilidades clave del texto
+patron_habilidad = r"Numero\[\d+\], Nombre\[(.*?)\], Descripcion \[(.*?)\]"
+habilidades = re.findall(patron_habilidad, key_skills)
 
-print ('Done! ✅') 
+fila_inicio = 3  # La fila donde comenzaremos a escribir
+for nombre, descripcion in habilidades:
+    # Actualiza las celdas en Google Sheets para el nombre y la descripción
+    sheet4.update_cell(fila_inicio, 1, nombre)  # Escribe el nombre en la columna 1
+    sheet4.update_cell(fila_inicio, 2, descripcion)  # Escribe la descripción en la columna 2
+    fila_inicio += 1  # Incrementa la fila para la próxima habilidad
 
+
+
+# =========================Printing Course Syllabus=========================
 
 print('Generating Course Syllabus .... 🤖')
 
@@ -288,5 +287,3 @@ syllabus = generate_course_syllabus(course_name, profile, course_focus, principa
 print (syllabus)
 
 print ('Writting in Google Sheets .... ✍️ ')
-
-
