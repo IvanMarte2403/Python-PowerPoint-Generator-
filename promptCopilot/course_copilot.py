@@ -144,7 +144,7 @@ def generate_course_syllabus(course_name, entry_profile, course_focus, main_obje
         f"tu misión es concretar un temario completo y detallado para el curso de {course_name}, orientado especialmente a {entry_profile} utilizando como base el perfil de egreso previamente generado, "
         f"el objetivo principal y objetivos secundarios, tu tarea consiste en diseñar un temario que cumpla con las especificaciones detalladas y las necesidades de la audiencia. Este temario debe estructurarse considerando los siguientes requisitos:\n"
         f"1. Duración Total del Curso: 6 semanas de enseñanza teórica y práctica, enfocando cada semana en el avance de un proyecto final.\n"
-        f"2. Total de clases: {total_classes}, distribución semanal: {weekly_distribution}\n"
+        f"2. Total de clases: {total_classes}, distribución semanal: {weekly_distribution}\n" 
         f"Al estructurar el temario, considera lo siguiente:\n"
         f"- La importancia de incorporar fundamentos teóricos sólidos junto con aplicaciones prácticas que reflejen situaciones reales del curso.\n"
         f"- La necesidad de adaptar los contenidos y metodologías de enseñanza para facilitar el aprendizaje del {entry_profile}, el {main_objective} y el enfoque {course_focus}.\n"
@@ -154,7 +154,7 @@ def generate_course_syllabus(course_name, entry_profile, course_focus, main_obje
         f"Conceptos: de clase: Los conceptos separados por comas de la clase,\n"
         f"Descripcion de la clase: Una breve descripcion que refleje los conceptos y el contenido de la clase y que outline saldrán los alumnos de esa clase,\n"
         f"Objetivos de la clase: 3 conceptos separados con comas de lo que se espera que los alumnos aprendan en la clase\n"
-        f"Retorna el siguiente formato obligatorio para cada habilidad:, no excluyas ningun []  No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido [] Semana[Nombre de la semana, Clases[Clase1 [Conceptos de clase], Descripcion de la clase, Objetivos de la clase], Clase2 [Conceptos de clase], Descripcion de la clase, Objetivos de la clase], Clase3 [Conceptos de clase], Descripcion de la clase, Objetivos de la clase], Clase4]\n"
+        f"Retorna el siguiente formato obligatorio para cada habilidad:, no excluyas ningun []  No se deben usar caracteres especiales o formatos específicos para el texto. Solo está permitido [] Semana[Nombre[Nombre de la semana], Clase1[[Conceptos de clase], Descripcion[Descripcion de la clase], Objetivos[Objetivos de la clase]],Clase2[[Conceptos de clase], Descripcion[Descripcion de la clase], Objetivos[Objetivos de la clase]]\n. empieza a contar la clase desde 1 por cada semana"
         f"Ten en cuenta {total_classes} clases en total."
     )
 
@@ -287,3 +287,30 @@ syllabus = generate_course_syllabus(course_name, profile, course_focus, principa
 print (syllabus)
 
 print ('Writting in Google Sheets .... ✍️ ')
+semanas = re.split(r'Semana\[', syllabus)[1:]  # Ignorar el primer elemento vacío
+
+fila_actual = 2
+
+for semana in semanas:
+    # Extraer la información de la semana y las clases
+    match = re.search(r'(.*?), Clase1', semana)
+    nombre_semana = match.group(1).strip() if match else 'Desconocido'
+    
+    # Escribir nombre de la semana
+    sheet5.update_cell(fila_actual, 1, 'Semana')
+    sheet5.update_cell(fila_actual, 2, nombre_semana)
+    
+    # Incrementar fila para empezar a escribir clases
+    fila_actual += 1
+    
+    # Separar e iterar sobre las clases 
+    clases = re.findall(r'Clase\d+\[\[(.*?)\], Descripcion\[(.*?)\], Objetivos\[(.*?)\]\]', semana)
+    for nombre_clase, descripcion, objetivos in clases:
+        # Escribir datos de la clase
+        sheet5.update_cell(fila_actual, 3, nombre_clase.strip())
+        sheet5.update_cell(fila_actual, 4, descripcion.strip())
+        sheet5.update_cell(fila_actual, 5, objetivos.strip())
+        fila_actual += 1
+
+    # Espacio entre semanas
+    fila_actual += 1
